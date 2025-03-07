@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 
                 self.stdout.write(self.style.SUCCESS(f"Ensured {len(time_slots)} time slots exist"))
 
-                # Create courses
+                # Create courses (Existing courses)
                 self.stdout.write("Creating courses...")
                 courses = [
                     Course.objects.create(code="CS101", name="Introduction to Programming", faculty=faculties[0], weekly_sessions=3),
@@ -81,6 +81,20 @@ class Command(BaseCommand):
                     Course.objects.create(code="CS401", name="Artificial Intelligence", faculty=faculties[4], weekly_sessions=2),
                 ]
                 self.stdout.write(self.style.SUCCESS(f"Created {len(courses)} courses"))
+
+                # New block: Additional courses to fill timetable slots
+                # To fill up the timetable (5 days * 6 sessions = 30 sessions), we need extra sessions.
+                # Existing courses create 21 sessions. Add extra courses providing additional 9 sessions.
+                self.stdout.write("Creating additional courses to fill timetable slots...")
+                extra_courses = [
+                    Course.objects.create(code="HIST101", name="World History", faculty=faculties[1], weekly_sessions=3),
+                    Course.objects.create(code="ENG101", name="English Literature", faculty=faculties[3], weekly_sessions=3),
+                    Course.objects.create(code="BIO101", name="Biology Basics", faculty=faculties[2], weekly_sessions=3),
+                ]
+                self.stdout.write(self.style.SUCCESS(f"Created {len(extra_courses)} additional courses"))
+                courses.extend(extra_courses)
+                total_sessions = sum(course.weekly_sessions for course in courses)
+                self.stdout.write(self.style.SUCCESS(f"Total sessions across courses: {total_sessions} (Expected: 30 sessions)"))
 
                 # Set faculty availability (make most time slots available)
                 self.stdout.write("Setting faculty availability...")
