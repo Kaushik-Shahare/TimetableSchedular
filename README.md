@@ -1,7 +1,5 @@
 # Automatic Timetable Scheduling System
 
-![Timetable Banner](https://via.placeholder.com/1200x300?text=Automatic+Timetable+Scheduler)
-
 ## 📚 Project Overview
 
 The Automatic Timetable Scheduling System is a web-based application designed to solve the complex problem of academic timetable generation. Using graph coloring algorithms and backtracking techniques, this system creates conflict-free schedules while respecting various constraints such as faculty availability, room capacity, and course requirements.
