@@ -1,0 +1,25 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4>Sample Data Created</h4>
+    </div>
+    <div class="card-body">
+        <p>Sample data has been created successfully. You can now generate a timetable.</p>
+        
+        <div class="mt-3 mb-4">
+            <a href="{% url 'generate-timetable' %}" class="btn btn-primary">Generate Timetable</a>
+            <a href="{% url 'generate-timetable-animated' %}" class="btn btn-info">Generate with Animation</a>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Return to Home</a>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Command Output</div>
+            <div class="card-body">
+                <pre class="bg-light p-3" style="max-height: 400px; overflow-y: auto;">{{ output }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

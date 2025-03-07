@@ -1,0 +1,29 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4>Initialize Default Time Slots</h4>
+    </div>
+    <div class="card-body">
+        <p>This will create default time slots for Monday through Saturday, with 6 lectures per day:</p>
+        
+        <ul>
+            <li><strong>Lecture 1:</strong> 9:00 AM - 9:50 AM</li>
+            <li><strong>Lecture 2:</strong> 10:00 AM - 10:50 AM</li>
+            <li><strong>Lecture 3:</strong> 11:00 AM - 11:50 AM</li>
+            <li><strong>Lecture 4:</strong> 12:00 PM - 12:50 PM</li>
+            <li><strong>Lecture 5:</strong> 2:00 PM - 2:50 PM (after lunch break)</li>
+            <li><strong>Lecture 6:</strong> 3:00 PM - 3:50 PM</li>
+        </ul>
+        
+        <p class="text-info">Note: This will not create duplicate time slots if they already exist.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Initialize Default Time Slots</button>
+            <a href="{% url 'timeslot-list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

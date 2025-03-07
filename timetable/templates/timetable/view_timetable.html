@@ -1,0 +1,119 @@
+{% extends 'timetable/base.html' %}
+{% load timetable_extras %}
+
+{% block content %}
+<h2>Timetable</h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        <a href="{% url 'generate-timetable' %}" class="btn btn-primary">Generate New Timetable</a>
+        <a href="{% url 'generate-timetable-verbose' %}" class="btn btn-info">Generate with Steps</a>
+        <a href="{% url 'generate-timetable-animated' %}" class="btn btn-warning">Animated Generation</a>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn btn-secondary">Print Timetable</button>
+    </div>
+</div>
+
+{% if not schedules %}
+<div class="alert alert-info">
+    <p>No timetable has been generated yet. <a href="{% url 'generate-timetable' %}">Generate a new timetable</a>.</p>
+    <p>Or <a href="{% url 'create-sample-data' %}">create sample data</a> first if you haven't added any courses, faculty, or rooms.</p>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Weekly Schedule</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Time</th>
+                        {% for day in days %}
+                        <th>{{ day_names|get_item:day }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for time_row in timetable %}
+                    <tr>
+                        <td class="align-middle"><strong>{{ time_row.start_time|time:"H:i" }} - {{ time_row.end_time|time:"H:i" }}</strong></td>
+                        
+                        {% for day in days %}
+                        <td class="align-top">
+                            {% for schedule in time_row.days|get_item:day %}
+                            <div class="course-block">
+                                <strong>{{ schedule.course.code }}</strong><br>
+                                {{ schedule.course.name }}<br>
+                                <small>{{ schedule.course.faculty.name }}</small><br>
+                                <small>Room: {{ schedule.room.name }}</small>
+                            </div>
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4>Schedule Details</h4>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Course</th>
+                    <th>Faculty</th>
+                    <th>Room</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedules %}
+                <tr>
+                    <td>{{ schedule.time_slot.get_day_display }}</td>
+                    <td>{{ schedule.time_slot.start_time|time:"H:i" }} - {{ schedule.time_slot.end_time|time:"H:i" }}</td>
+                    <td>{{ schedule.course.code }}: {{ schedule.course.name }}</td>
+                    <td>{{ schedule.course.faculty.name }}</td>
+                    <td>{{ schedule.room.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .course-block {
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+        border-radius: 3px;
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+    
+    @media print {
+        .btn {
+            display: none;
+        }
+        
+        .card {
+            border: none;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #000;
+        }
+    }
+</style>
+{% endif %}
+{% endblock %}

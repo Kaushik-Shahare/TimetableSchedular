@@ -1,0 +1,36 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Time Slot List</h2>
+    <div>
+        <a href="{% url 'timeslot-add' %}" class="btn btn-primary me-2">Add New Time Slot</a>
+        <a href="{% url 'init-default-timeslots' %}" class="btn btn-outline-primary">Initialize Default Time Slots</a>
+    </div>
+</div>
+
+{% if timeslots %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for timeslot in timeslots %}
+        <tr>
+            <td>{{ timeslot.get_day_display }}</td>
+            <td>{{ timeslot.start_time }}</td>
+            <td>{{ timeslot.end_time }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">
+    No time slots found. <a href="{% url 'timeslot-add' %}">Add a new time slot</a>.
+</div>
+{% endif %}
+{% endblock %}

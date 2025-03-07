@@ -1,0 +1,27 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4>Generate Timetable</h4>
+    </div>
+    <div class="card-body">
+        <p>This will generate a new timetable using backtracking and graph coloring algorithms to satisfy all constraints.</p>
+        <p>Before generating, make sure you have:</p>
+        <ul>
+            <li>Added faculty members and their availability</li>
+            <li>Created time slots</li>
+            <li>Added rooms</li>
+            <li>Created courses and assigned faculty</li>
+        </ul>
+        
+        <p class="text-warning">Warning: This will replace any existing timetable.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Generate New Timetable</button>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

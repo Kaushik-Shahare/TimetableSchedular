@@ -1,0 +1,43 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>{% if form.instance.id %}Edit{% else %}Add New{% endif %} Room</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Room Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="alert alert-danger mt-1">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacity</label>
+                {{ form.capacity }}
+                {% if form.capacity.errors %}
+                <div class="alert alert-danger mt-1">{{ form.capacity.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.has_projector }}
+                <label for="{{ form.has_projector.id_for_label }}" class="form-check-label">Has Projector</label>
+                {% if form.has_projector.errors %}
+                <div class="alert alert-danger mt-1">{{ form.has_projector.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'room-list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

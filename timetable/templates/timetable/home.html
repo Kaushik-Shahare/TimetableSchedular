@@ -1,0 +1,92 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Automated Timetable Scheduling System</h1>
+    <p class="lead">Generate conflict-free timetables using backtracking and graph coloring algorithms based on faculty availability.</p>
+    <hr class="my-4">
+    <p>To get started, follow these steps:</p>
+    <ol>
+        <li>Add <a href="{% url 'faculty-list' %}">Faculty members</a> to the system</li>
+        <li>Create <a href="{% url 'timeslot-list' %}">Time Slots</a> for your schedule</li>
+        <li>Set up <a href="{% url 'faculty-list' %}">Faculty Availability</a> for each time slot</li>
+        <li>Add <a href="{% url 'room-list' %}">Rooms</a> available for classes</li>
+        <li>Create <a href="{% url 'course-list' %}">Courses</a> and assign faculty</li>
+        <li>Finally, <a href="{% url 'generate-timetable' %}">Generate Timetable</a> based on all constraints</li>
+    </ol>
+    <p class="lead">
+        <a class="btn btn-primary btn-lg" href="{% url 'generate-timetable' %}" role="button">Generate Timetable</a>
+        <a class="btn btn-secondary btn-lg" href="{% url 'view-timetable' %}" role="button">View Timetable</a>
+    </p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Faculty Management</h5>
+                <p class="card-text">Add faculty members and manage their availability.</p>
+                <a href="{% url 'faculty-list' %}" class="btn btn-primary">Manage Faculty</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Course Management</h5>
+                <p class="card-text">Add courses and assign them to faculty members.</p>
+                <a href="{% url 'course-list' %}" class="btn btn-primary">Manage Courses</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Room Management</h5>
+                <p class="card-text">Add rooms and set their capacity and features.</p>
+                <a href="{% url 'room-list' %}" class="btn btn-primary">Manage Rooms</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Timetable Generation</h5>
+                <p class="card-text">Generate a new timetable or view the existing one.</p>
+                <div class="btn-group">
+                    <a href="{% url 'generate-timetable' %}" class="btn btn-primary">Generate Timetable</a>
+                    <a href="{% url 'generate-timetable-verbose' %}" class="btn btn-info">Generate with Algorithm Steps</a>
+                    <a href="{% url 'view-timetable' %}" class="btn btn-secondary">View Timetable</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Start</h5>
+                <p class="card-text">Create sample data and generate a timetable to see the system in action.</p>
+                <a href="{% url 'create-sample-data' %}" class="btn btn-success">Create Sample Data</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Timetable Generation</h5>
+                <p class="card-text">Generate a new timetable or view the existing one.</p>
+                <div class="btn-group">
+                    <a href="{% url 'generate-timetable' %}" class="btn btn-primary">Generate Timetable</a>
+                    <a href="{% url 'generate-timetable-verbose' %}" class="btn btn-info">View Algorithm Steps</a>
+                    <a href="{% url 'generate-timetable-animated' %}" class="btn btn-warning">Animated Generation</a>
+                    <a href="{% url 'view-timetable' %}" class="btn btn-secondary">View Timetable</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

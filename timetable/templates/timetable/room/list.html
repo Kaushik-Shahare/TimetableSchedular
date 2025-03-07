@@ -1,0 +1,33 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Room List</h2>
+    <a href="{% url 'room-add' %}" class="btn btn-primary">Add New Room</a>
+</div>
+
+{% if rooms %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Capacity</th>
+            <th>Has Projector</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for room in rooms %}
+        <tr>
+            <td>{{ room.name }}</td>
+            <td>{{ room.capacity }}</td>
+            <td>{% if room.has_projector %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">
+    No rooms found. <a href="{% url 'room-add' %}">Add a new room</a>.
+</div>
+{% endif %}
+{% endblock %}

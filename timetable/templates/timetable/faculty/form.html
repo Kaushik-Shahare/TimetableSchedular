@@ -1,0 +1,43 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>{% if form.instance.id %}Edit{% else %}Add New{% endif %} Faculty</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="alert alert-danger mt-1">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                {{ form.department }}
+                {% if form.department.errors %}
+                <div class="alert alert-danger mt-1">{{ form.department.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <div class="alert alert-danger mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'faculty-list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

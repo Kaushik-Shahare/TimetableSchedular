@@ -1,0 +1,30 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4>Create Sample Data</h4>
+    </div>
+    <div class="card-body">
+        <p>This will create sample data for testing the timetable generator:</p>
+        
+        <ul>
+            <li>5 faculty members with different availability patterns</li>
+            <li>5 rooms with various capacities</li>
+            <li>9 courses with different weekly session requirements</li>
+            <li>Faculty availability settings (with some constraints)</li>
+        </ul>
+        
+        <div class="alert alert-warning">
+            <strong>Warning:</strong> This will override any existing sample data with the same identifiers. 
+            It's recommended to start with an empty database.
+        </div>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Create Sample Data</button>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

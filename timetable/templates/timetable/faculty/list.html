@@ -1,0 +1,37 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Faculty List</h2>
+    <a href="{% url 'faculty-add' %}" class="btn btn-primary">Add New Faculty</a>
+</div>
+
+{% if faculties %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faculty in faculties %}
+        <tr>
+            <td>{{ faculty.name }}</td>
+            <td>{{ faculty.department }}</td>
+            <td>{{ faculty.email }}</td>
+            <td>
+                <a href="{% url 'faculty-availability' faculty.id %}" class="btn btn-sm btn-info">Set Availability</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">
+    No faculty members found. <a href="{% url 'faculty-add' %}">Add a new faculty member</a>.
+</div>
+{% endif %}
+{% endblock %}

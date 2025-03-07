@@ -1,0 +1,601 @@
+{% extends 'timetable/base.html' %}
+
+{% block content %}
+<h2>Animated Timetable Generation with Graph Coloring</h2>
+<p class="lead">This visualization shows how the backtracking algorithm uses graph coloring principles to generate a conflict-free timetable.</p>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Algorithm Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="algorithm-status" class="alert alert-info">
+                    Click "Start Algorithm" to begin the timetable generation process.
+                </div>
+                
+                <div class="progress mb-3">
+                    <div id="algorithm-progress" class="progress-bar" role="progressbar" style="width: 0%;" 
+                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                
+                <button id="start-algorithm" class="btn btn-primary">Start Algorithm</button>
+                <button id="pause-algorithm" class="btn btn-warning" disabled>Pause</button>
+                <button id="resume-algorithm" class="btn btn-success" disabled>Resume</button>
+                <button id="stop-algorithm" class="btn btn-danger" disabled>Stop</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Statistics</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Steps:</strong> <span id="step-counter">0</span></p>
+                <p><strong>Assignments Tried:</strong> <span id="assignments-counter">0</span></p>
+                <p><strong>Backtracks:</strong> <span id="backtracks-counter">0</span></p>
+                <p><strong>Elapsed Time:</strong> <span id="elapsed-time">0s</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5>Graph Coloring Visualization</h5>
+            </div>
+            <div class="card-body">
+                <!-- Canvas for the graph visualization -->
+                <div id="graph-container" style="height: 400px; border: 1px solid #ddd; position: relative; overflow: hidden;">
+                    <canvas id="graph-canvas" style="width: 100%; height: 100%;"></canvas>
+                    <div id="graph-legend" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px;">
+                        <div><span style="display: inline-block; width: 15px; height: 15px; background-color: #ccc; margin-right: 5px;"></span>Unassigned</div>
+                        <div><span style="display: inline-block; width: 15px; height: 15px; background-color: #28a745; margin-right: 5px;"></span>Assigned</div>
+                        <div><span style="display: inline-block; width: 15px; height: 15px; background-color: #dc3545; margin-right: 5px;"></span>Conflict</div>
+                        <div><span style="display: inline-block; width: 15px; height: 15px; background-color: #ffc107; margin-right: 5px;"></span>Backtracking</div>
+                        <div><span style="display: inline-block; width: 15px; height: 15px; border: 2px solid red; margin-right: 5px;"></span>Current Focus</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Algorithm Explanation</h5>
+            </div>
+            <div class="card-body">
+                <p>This visualization shows how the backtracking algorithm solves the timetable scheduling problem using graph coloring concepts:</p>
+                <ul>
+                    <li><strong>Nodes:</strong> Represent courses that need to be scheduled</li>
+                    <li><strong>Edges:</strong> Connect courses that cannot be scheduled at the same time (same faculty or same room)</li>
+                    <li><strong>Colors:</strong> Represent different time slots</li>
+                </ul>
+                <p>The algorithm attempts to assign a color (time slot) to each node (course) such that no two adjacent nodes have the same color (no conflicts).</p>
+                <p>When a conflict is detected, the algorithm <strong>backtracks</strong> and tries another assignment.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5>Current Assignment</h5>
+            </div>
+            <div class="card-body">
+                <div id="current-assignment">
+                    <p><strong>Course:</strong> <span id="current-course">-</span></p>
+                    <p><strong>Faculty:</strong> <span id="current-faculty">-</span></p>
+                    <p><strong>Room:</strong> <span id="current-room">-</span></p>
+                    <p><strong>Time Slot:</strong> <span id="current-timeslot">-</span></p>
+                    <div id="assignment-status" class="alert alert-light">Waiting to start...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Algorithm Log</h5>
+            </div>
+            <div class="card-body">
+                <pre id="algorithm-log" style="height: 300px; overflow-y: auto; background-color: #f8f9fa; padding: 15px; font-family: monospace;"></pre>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Animation Controls</h5>
+            </div>
+            <div class="card-body">
+                <label for="animation-speed" class="form-label">Animation Speed:</label>
+                <input type="range" class="form-range" id="animation-speed" min="100" max="2000" value="500" step="100">
+                <div class="d-flex justify-content-between">
+                    <span>Fast</span>
+                    <span id="speed-value">500ms</span>
+                    <span>Slow</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+    <a id="view-result-btn" href="{% url 'view-timetable' %}" class="btn btn-primary disabled">View Final Timetable</a>
+</div>
+
+<!-- Include the Graph visualization library -->
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.0/dist/vis-network.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const algorithmLog = document.getElementById('algorithm-log');
+        const startBtn = document.getElementById('start-algorithm');
+        const pauseBtn = document.getElementById('pause-algorithm');
+        const resumeBtn = document.getElementById('resume-algorithm');
+        const stopBtn = document.getElementById('stop-algorithm');
+        const statusElement = document.getElementById('algorithm-status');
+        const progressBar = document.getElementById('algorithm-progress');
+        const stepCounter = document.getElementById('step-counter');
+        const assignmentsCounter = document.getElementById('assignments-counter');
+        const backtrackCounter = document.getElementById('backtracks-counter');
+        const elapsedTime = document.getElementById('elapsed-time');
+        const speedSlider = document.getElementById('animation-speed');
+        const speedValue = document.getElementById('speed-value');
+        const viewResultBtn = document.getElementById('view-result-btn');
+        
+        const currentCourse = document.getElementById('current-course');
+        const currentFaculty = document.getElementById('current-faculty');
+        const currentRoom = document.getElementById('current-room');
+        const currentTimeSlot = document.getElementById('current-timeslot');
+        const assignmentStatus = document.getElementById('assignment-status');
+        
+        // Graph visualization setup
+        const graphContainer = document.getElementById('graph-container');
+        const canvas = document.getElementById('graph-canvas');
+        
+        // Variables
+        let animationDelay = parseInt(speedSlider.value);
+        let running = false;
+        let steps = 0;
+        let assignments = 0;
+        let backtracks = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let network = null;
+        let nodes = new vis.DataSet();
+        let edges = new vis.DataSet();
+        let currentStepIndex = 0;
+        let algorithmSteps = [];
+        
+        // Colors for nodes (representing time slots)
+        const timeSlotColors = [
+            "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", 
+            "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+            "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
+            "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
+        ];
+        
+        // Initialize network graph
+        function initializeGraph() {
+            // Create a network
+            const data = {
+                nodes: nodes,
+                edges: edges
+            };
+            
+            const options = {
+                nodes: {
+                    shape: 'circle',
+                    size: 25,
+                    font: {
+                        size: 14
+                    },
+                    borderWidth: 2,
+                    shadow: true
+                },
+                edges: {
+                    width: 2,
+                    color: {
+                        color: '#848484',
+                        highlight: '#FF0000'
+                    },
+                    smooth: {
+                        type: 'dynamic'
+                    }
+                },
+                physics: {
+                    stabilization: true,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    }
+                },
+                interaction: {
+                    tooltipDelay: 200,
+                    hover: true
+                }
+            };
+            
+            network = new vis.Network(graphContainer, data, options);
+        }
+        
+        // Speed control
+        speedSlider.addEventListener('input', function() {
+            animationDelay = parseInt(this.value);
+            speedValue.textContent = animationDelay + 'ms';
+        });
+        
+        // Set initial speed value
+        speedValue.textContent = speedSlider.value + 'ms';
+        
+        // Initialize the graph
+        initializeGraph();
+        
+        // Timer function
+        function updateTimer() {
+            if (startTime) {
+                const elapsed = Math.floor((new Date() - startTime) / 1000);
+                elapsedTime.textContent = elapsed + 's';
+            }
+        }
+        
+        // Log function
+        function appendToLog(message, className = '') {
+            const line = document.createElement('div');
+            line.textContent = message;
+            if (className) {
+                line.className = className;
+            }
+            algorithmLog.appendChild(line);
+            algorithmLog.scrollTop = algorithmLog.scrollHeight;
+        }
+        
+        // Update assignment display
+        function updateAssignment(step) {
+            if (step.course_code) {
+                currentCourse.textContent = step.course_code + ": " + step.course_name || '-';
+            }
+            if (step.faculty_name) {
+                currentFaculty.textContent = step.faculty_name || '-';
+            }
+            if (step.room_name) {
+                currentRoom.textContent = step.room_name || '-';
+            }
+            if (step.time_slot) {
+                currentTimeSlot.textContent = step.time_slot || '-';
+            }
+            
+            assignmentStatus.className = 'alert';
+            
+            if (step.type === 'attempt' && step.result === 'success') {
+                assignmentStatus.classList.add('alert-success');
+                assignmentStatus.textContent = 'Assignment successful! Proceeding...';
+                assignments++;
+            } else if (step.type === 'conflict') {
+                assignmentStatus.classList.add('alert-danger');
+                assignmentStatus.textContent = 'Conflict detected! Trying alternative...';
+            } else if (step.type === 'backtrack') {
+                assignmentStatus.classList.add('alert-warning');
+                assignmentStatus.textContent = 'Backtracking to find alternative solutions...';
+                backtracks++;
+            } else if (step.type === 'success') {
+                assignmentStatus.classList.add('alert-success');
+                assignmentStatus.textContent = 'Successfully assigned course to time slot!';
+            } else if (step.type === 'failure') {
+                assignmentStatus.classList.add('alert-danger');
+                assignmentStatus.textContent = 'Failed to find a valid slot for this course';
+            } else {
+                assignmentStatus.classList.add('alert-light');
+                assignmentStatus.textContent = 'Processing...';
+            }
+            
+            assignmentsCounter.textContent = assignments;
+            backtrackCounter.textContent = backtracks;
+        }
+        
+        // Update graph based on algorithm step
+        function updateGraph(step) {
+            if (step.type === 'init') {
+                // Reset graph
+                nodes.clear();
+                edges.clear();
+                return;
+            }
+            
+            if (step.type === 'course') {
+                // Add a node for the course
+                const nodeId = step.course_code;
+                if (!nodes.get(nodeId)) {
+                    nodes.add({
+                        id: nodeId,
+                        label: step.course_code,
+                        title: step.course_name,
+                        color: { background: '#ccc' } // Default unassigned color
+                    });
+                } else {
+                    nodes.update({
+                        id: nodeId,
+                        color: { background: '#ccc', border: 'red', borderWidth: 3 } // Highlight current node
+                    });
+                }
+                
+                // Add edges for constraints (faculty sharing, etc.)
+                if (step.constraints) {
+                    for (const constraint of step.constraints) {
+                        edges.add({
+                            from: nodeId,
+                            to: constraint,
+                            title: 'Cannot be scheduled at same time'
+                        });
+                    }
+                }
+            }
+            
+            if (step.type === 'attempt') {
+                // Trying to assign a time slot (color) to a node
+                const nodeId = step.course_code;
+                const timeSlotIndex = step.time_slot_id % timeSlotColors.length;
+                const color = timeSlotColors[timeSlotIndex];
+                
+                nodes.update({
+                    id: nodeId,
+                    color: { background: '#ffc107', border: 'red', borderWidth: 3 } // Highlighting the attempt
+                });
+                
+                // Delay to show the assignment attempt
+                setTimeout(() => {
+                    if (running) {
+                        if (step.result === 'success') {
+                            nodes.update({
+                                id: nodeId,
+                                color: { background: color, border: '#28a745', borderWidth: 2 },
+                                title: `${step.course_code}: ${step.course_name}\nAssigned to: ${step.time_slot}`
+                            });
+                        }
+                    }
+                }, animationDelay / 2);
+            }
+            
+            if (step.type === 'conflict') {
+                // Show conflict in the graph
+                const nodeId = step.course_code;
+                if (nodeId) {
+                    nodes.update({
+                        id: nodeId,
+                        color: { background: '#dc3545', border: 'red', borderWidth: 3 }
+                    });
+                    
+                    // Reset after showing conflict
+                    setTimeout(() => {
+                        if (running) {
+                            nodes.update({
+                                id: nodeId,
+                                color: { background: '#ccc', border: '#848484', borderWidth: 2 }
+                            });
+                        }
+                    }, animationDelay / 2);
+                }
+            }
+            
+            if (step.type === 'backtrack') {
+                // Show backtracking in the graph
+                const nodeId = step.course_code;
+                nodes.update({
+                    id: nodeId,
+                    color: { background: '#ffc107', border: 'red', borderWidth: 3 }
+                });
+                
+                // Reset after showing backtrack
+                setTimeout(() => {
+                    if (running) {
+                        nodes.update({
+                            id: nodeId,
+                            color: { background: '#ccc', border: '#848484', borderWidth: 2 }
+                        });
+                    }
+                }, animationDelay / 2);
+            }
+            
+            if (step.type === 'success') {
+                // Final successful assignment
+                const nodeId = step.course_code;
+                const timeSlotIndex = step.time_slot_id % timeSlotColors.length;
+                const color = timeSlotColors[timeSlotIndex];
+                
+                nodes.update({
+                    id: nodeId,
+                    color: { background: color, border: '#28a745', borderWidth: 2 },
+                    title: `${step.course_code}: ${step.course_name}\nAssigned to: ${step.time_slot}`
+                });
+            }
+            
+            if (step.type === 'complete') {
+                // Algorithm completed
+                viewResultBtn.classList.remove('disabled');
+            }
+        }
+        
+        // Fetch algorithm steps
+        async function fetchAlgorithmSteps() {
+            try {
+                const response = await fetch('{% url "timetable-step" %}');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching algorithm steps:', error);
+                return { error: true };
+            }
+        }
+        
+        // Process algorithm step
+        async function processStep(stepIndex) {
+            if (!running || stepIndex >= algorithmSteps.length) return;
+            
+            const step = algorithmSteps[stepIndex];
+            steps++;
+            
+            let message = '';
+            let className = '';
+            
+            // Update UI based on step type
+            if (step.type === 'init' || step.type === 'info') {
+                message = step.message;
+                className = 'text-info';
+            } else if (step.type === 'course') {
+                message = `👉 Scheduling ${step.course_code}: ${step.course_name}`;
+                className = 'text-primary';
+                updateAssignment(step);
+            } else if (step.type === 'attempt') {
+                message = `Trying ${step.course_code} in ${step.room_name} at ${step.time_slot}`;
+                className = 'text-dark';
+                updateAssignment(step);
+            } else if (step.type === 'conflict') {
+                message = `❌ ${step.message}`;
+                className = 'text-danger';
+                updateAssignment(step);
+            } else if (step.type === 'backtrack') {
+                message = `⏪ ${step.message}`;
+                className = 'text-warning';
+                updateAssignment(step);
+            } else if (step.type === 'success') {
+                message = `✅ ${step.message}`;
+                className = 'text-success';
+                updateAssignment(step);
+            } else if (step.type === 'complete') {
+                message = `🎉 ${step.message}`;
+                className = 'text-success';
+                statusElement.className = 'alert alert-success';
+                statusElement.textContent = 'Timetable generated successfully!';
+            } else if (step.type === 'failure') {
+                message = `❗ ${step.message}`;
+                className = 'text-danger';
+                updateAssignment(step);
+            }
+            
+            // Update log and graph
+            appendToLog(message, className);
+            updateGraph(step);
+            stepCounter.textContent = steps;
+            
+            // Update progress
+            const progress = Math.floor((stepIndex / (algorithmSteps.length - 1)) * 100);
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+            
+            // Process next step after delay
+            if (running && stepIndex < algorithmSteps.length - 1) {
+                setTimeout(() => processStep(stepIndex + 1), animationDelay);
+            } else if (stepIndex >= algorithmSteps.length - 1) {
+                completeAlgorithm();
+            }
+        }
+        
+        // Run the algorithm
+        async function runAlgorithm() {
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            statusElement.className = 'alert alert-info';
+            statusElement.textContent = 'Fetching algorithm data...';
+            
+            // Get the initial data
+            try {
+                const data = await fetchAlgorithmSteps();
+                if (data.error) {
+                    statusElement.className = 'alert alert-danger';
+                    statusElement.textContent = 'Error fetching algorithm data';
+                    return;
+                }
+                
+                // Store all steps
+                algorithmSteps = data.steps || [
+                    // Fallback mock data if no real steps are available
+                    { type: 'init', message: 'Starting timetable generation algorithm...' },
+                    { type: 'info', message: 'Clearing existing schedules...' },
+                    { type: 'course', course_code: 'CS101', course_name: 'Introduction to Programming', faculty_name: 'Dr. Smith' },
+                    { type: 'attempt', course_code: 'CS101', course_name: 'Introduction to Programming', room_name: 'Room 101', time_slot: 'Monday 9:00-9:50', result: 'success' },
+                    { type: 'success', course_code: 'CS101', course_name: 'Introduction to Programming', room_name: 'Room 101', time_slot: 'Monday 9:00-9:50', message: 'Assigned CS101 to Room 101 on Monday 9:00-9:50' },
+                    { type: 'course', course_code: 'MATH101', course_name: 'Calculus I', faculty_name: 'Dr. Johnson' },
+                    { type: 'attempt', course_code: 'MATH101', course_name: 'Calculus I', room_name: 'Room 101', time_slot: 'Monday 9:00-9:50', result: 'conflict' },
+                    { type: 'conflict', course_code: 'MATH101', message: 'Room 101 at Monday 9:00-9:50: Room already booked', room_name: 'Room 101', time_slot: 'Monday 9:00-9:50' },
+                    { type: 'attempt', course_code: 'MATH101', course_name: 'Calculus I', room_name: 'Room 102', time_slot: 'Monday 9:00-9:50', result: 'success' },
+                    { type: 'success', course_code: 'MATH101', course_name: 'Calculus I', room_name: 'Room 102', time_slot: 'Monday 9:00-9:50', message: 'Assigned MATH101 to Room 102 on Monday 9:00-9:50' },
+                    { type: 'course', course_code: 'PHY101', course_name: 'Physics I', faculty_name: 'Dr. Davis' },
+                    { type: 'attempt', course_code: 'PHY101', course_name: 'Physics I', room_name: 'Room 101', time_slot: 'Monday 10:00-10:50', result: 'conflict' },
+                    { type: 'backtrack', course_code: 'PHY101', course_name: 'Physics I', message: 'No valid slots found for PHY101 with current assignments, backtracking...' },
+                    { type: 'complete', message: 'Timetable generation completed successfully!' }
+                ];
+                
+                statusElement.textContent = 'Running algorithm...';
+                running = true;
+                
+                // Start processing steps
+                processStep(0);
+                
+            } catch (error) {
+                console.error('Error in runAlgorithm:', error);
+                statusElement.className = 'alert alert-danger';
+                statusElement.textContent = 'Error running algorithm: ' + error.message;
+            }
+        }
+        
+        function completeAlgorithm() {
+            clearInterval(timerInterval);
+            
+            running = false;
+            startBtn.disabled = true;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+        }
+        
+        // Button event listeners
+        startBtn.addEventListener('click', function() {
+            algorithmLog.innerHTML = '';
+            steps = 0;
+            assignments = 0;
+            backtracks = 0;
+            running = true;
+            runAlgorithm();
+        });
+        
+        pauseBtn.addEventListener('click', function() {
+            running = false;
+            statusElement.className = 'alert alert-warning';
+            statusElement.textContent = 'Algorithm paused';
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = false;
+        });
+        
+        resumeBtn.addEventListener('click', function() {
+            running = true;
+            statusElement.className = 'alert alert-info';
+            statusElement.textContent = 'Algorithm is running...';
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = true;
+            processStep(currentStepIndex);
+        });
+        
+        stopBtn.addEventListener('click', function() {
+            running = false;
+            statusElement.className = 'alert alert-danger';
+            statusElement.textContent = 'Algorithm stopped by user';
+            completeAlgorithm();
+        });
+    });
+</script>
+{% endblock %}
