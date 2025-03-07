@@ -116,8 +116,45 @@ def view_timetable(request):
     days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
     day_names = dict(TimeSlot.DAY_CHOICES)
     
-    # Get all schedules
-    schedules = Schedule.objects.all().order_by('time_slot__day', 'time_slot__start_time')
+    # Get filter parameters
+    filter_type = request.GET.get('type', 'all')
+    selected_id = request.GET.get('id', '')
+    filter_title = None
+    
+    # Get filter options for dropdowns
+    faculties = Faculty.objects.all().order_by('name')
+    rooms = Room.objects.all().order_by('name')
+    courses = Course.objects.all().order_by('code')
+    
+    # Get base queryset depending on filter
+    schedules = Schedule.objects.all()
+    
+    if filter_type == 'faculty' and selected_id:
+        try:
+            faculty = Faculty.objects.get(id=selected_id)
+            schedules = schedules.filter(course__faculty=faculty)
+            filter_title = f"Faculty Timetable: {faculty.name}"
+        except Faculty.DoesNotExist:
+            pass
+    
+    elif filter_type == 'room' and selected_id:
+        try:
+            room = Room.objects.get(id=selected_id)
+            schedules = schedules.filter(room=room)
+            filter_title = f"Room Timetable: {room.name}"
+        except Room.DoesNotExist:
+            pass
+    
+    elif filter_type == 'student' and selected_id:
+        try:
+            course = Course.objects.get(id=selected_id)
+            schedules = schedules.filter(course=course)
+            filter_title = f"Course Timetable: {course.code} - {course.name}"
+        except Course.DoesNotExist:
+            pass
+    
+    # Order the schedules
+    schedules = schedules.order_by('time_slot__day', 'time_slot__start_time')
     
     # Get all distinct time slots ordered by start time
     all_time_slots = TimeSlot.objects.values('start_time', 'end_time').distinct().order_by('start_time')
@@ -156,6 +193,12 @@ def view_timetable(request):
         'days': days,
         'day_names': day_names,
         'timetable': timetable_list,
+        'filter_type': filter_type,
+        'selected_id': selected_id,
+        'filter_title': filter_title,
+        'faculties': faculties,
+        'rooms': rooms,
+        'courses': courses,
     }
     return render(request, 'timetable/view_timetable.html', context)
 

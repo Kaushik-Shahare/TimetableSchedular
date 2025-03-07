@@ -15,6 +15,85 @@
     </div>
 </div>
 
+<!-- Filter Panel -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">View Timetable By</h5>
+    </div>
+    <div class="card-body">
+        <!-- Filter Buttons -->
+        <div class="btn-group btn-group-lg w-100 mb-3" role="group" id="filter-buttons">
+            <a href="{% url 'view-timetable' %}" class="btn {% if filter_type == 'all' or not filter_type %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+            <a href="{% url 'view-timetable' %}?type=faculty" class="btn {% if filter_type == 'faculty' %}btn-primary{% else %}btn-outline-primary{% endif %}">Faculty</a>
+            <a href="{% url 'view-timetable' %}?type=room" class="btn {% if filter_type == 'room' %}btn-primary{% else %}btn-outline-primary{% endif %}">Room</a>
+            <a href="{% url 'view-timetable' %}?type=student" class="btn {% if filter_type == 'student' %}btn-primary{% else %}btn-outline-primary{% endif %}">Student/Course</a>
+        </div>
+
+        {% if filter_type == 'faculty' %}
+            <form method="GET" class="mb-3" id="entity-form">
+                <input type="hidden" name="type" value="faculty">
+                <div class="row align-items-end">
+                    <div class="col-md-8">
+                        <label for="entity-select" class="form-label"><strong>Select Faculty:</strong></label>
+                        <select name="id" id="entity-select" class="form-select form-select-lg">
+                            <option value="">-- Select Faculty --</option>
+                            {% for f in faculties %}
+                                <option value="{{ f.id }}" {% if selected_id == f.id|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success btn-lg">Apply</button>
+                    </div>
+                </div>
+            </form>
+        {% elif filter_type == 'room' %}
+            <form method="GET" class="mb-3" id="entity-form">
+                <input type="hidden" name="type" value="room">
+                <div class="row align-items-end">
+                    <div class="col-md-8">
+                        <label for="entity-select" class="form-label"><strong>Select Room:</strong></label>
+                        <select name="id" id="entity-select" class="form-select form-select-lg">
+                            <option value="">-- Select Room --</option>
+                            {% for r in rooms %}
+                                <option value="{{ r.id }}" {% if selected_id == r.id|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success btn-lg">Apply</button>
+                    </div>
+                </div>
+            </form>
+        {% elif filter_type == 'student' %}
+            <form method="GET" class="mb-3" id="entity-form">
+                <input type="hidden" name="type" value="student">
+                <div class="row align-items-end">
+                    <div class="col-md-8">
+                        <label for="entity-select" class="form-label"><strong>Select Course:</strong></label>
+                        <select name="id" id="entity-select" class="form-select form-select-lg">
+                            <option value="">-- Select Course --</option>
+                            {% for c in courses %}
+                                <option value="{{ c.id }}" {% if selected_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.code }}: {{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success btn-lg">Apply</button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+
+        {% if filter_title %}
+            <div class="alert alert-info mb-0">
+                <h5 class="mb-0"><i class="bi bi-filter"></i> {{ filter_title }}</h5>
+                <small class="d-block mt-1">Showing timetable filtered by selected criteria</small>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 {% if not schedules %}
 <div class="alert alert-info">
     <p>No timetable has been generated yet. <a href="{% url 'generate-timetable' %}">Generate a new timetable</a>.</p>
@@ -23,7 +102,7 @@
 {% else %}
 <div class="card mb-4">
     <div class="card-header">
-        <h4>Weekly Schedule</h4>
+        <h4>Weekly Schedule {% if filter_title %}({{ filter_title }}){% endif %}</h4>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -32,24 +111,25 @@
                     <tr>
                         <th>Time</th>
                         {% for day in days %}
-                        <th>{{ day_names|get_item:day }}</th>
+                        <th>{{ day }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for time_row in timetable %}
+                    {% regroup schedules by time_slot.start_time as time_slots_by_time %}
+                    {% for time_group in time_slots_by_time %}
                     <tr>
-                        <td class="align-middle"><strong>{{ time_row.start_time|time:"H:i" }} - {{ time_row.end_time|time:"H:i" }}</strong></td>
-                        
+                        <td>{{ time_group.grouper|time:"H:i" }} - {{ time_group.list.0.time_slot.end_time|time:"H:i" }}</td>
                         {% for day in days %}
-                        <td class="align-top">
-                            {% for schedule in time_row.days|get_item:day %}
-                            <div class="course-block">
-                                <strong>{{ schedule.course.code }}</strong><br>
-                                {{ schedule.course.name }}<br>
-                                <small>{{ schedule.course.faculty.name }}</small><br>
-                                <small>Room: {{ schedule.room.name }}</small>
-                            </div>
+                        <td>
+                            {% for schedule in time_group.list %}
+                                {% if schedule.time_slot.day == day %}
+                                <div class="course-block">
+                                    <strong>{{ schedule.course.code }}</strong><br>
+                                    <small>{{ schedule.course.name }}</small><br>
+                                    <small>Room: {{ schedule.room.name }}</small>
+                                </div>
+                                {% endif %}
                             {% endfor %}
                         </td>
                         {% endfor %}
@@ -60,7 +140,6 @@
         </div>
     </div>
 </div>
-
 <div class="card">
     <div class="card-header">
         <h4>Schedule Details</h4>
@@ -90,6 +169,19 @@
         </table>
     </div>
 </div>
+{% endif %}
+
+<script>
+    // Add immediate form submission when selection changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const entitySelect = document.getElementById('entity-select');
+        if (entitySelect) {
+            entitySelect.addEventListener('change', function() {
+                document.getElementById('entity-form').submit();
+            });
+        }
+    });
+</script>
 
 <style>
     .course-block {
@@ -114,6 +206,44 @@
             border-bottom: 2px solid #000;
         }
     }
+    
+    /* Add styles for the filter UI */
+    #filter-buttons .btn {
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+    
+    #filter-buttons .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Make specific filter types visually distinct */
+    .faculty-filter .card-header {
+        background-color: #28a745 !important;
+    }
+    
+    .room-filter .card-header {
+        background-color: #dc3545 !important;
+    }
+    
+    .student-filter .card-header {
+        background-color: #17a2b8 !important;
+    }
+    
+    #entity-form {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    #entity-form label {
+        font-size: 1.1rem;
+    }
+    
+    .alert-info {
+        border-left: 5px solid #17a2b8;
+    }
 </style>
-{% endif %}
 {% endblock %}
